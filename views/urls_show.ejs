@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>TinyApp</title>
+    <% include ./partials/_header %>
   </head>
   <body>
     <h1>URL Listings</h1>
     <p>
-      <%= shortURL  %> - <%= urls[shortURL] %>
+      <%= urls[shortURL]  %> - <%= shortURL %>
     </p>
   </body>
 </html>
