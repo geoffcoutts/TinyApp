@@ -33,17 +33,18 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);
-  res.send("Ok");
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`http://localhost:8080/urls/${shortURL}`);
 });
 
-app.get("/urls.json", (req, res) =>{
-  res.json(urlDatabase);
-});
+// app.get("/urls.json", (req, res) =>{
+//   res.json(urlDatabase);
+// });
 
-app.get("/hello", (req, res) => {
-  res.end("<html><body>Hello <b>World</b></body></html>\n");
-});
+// app.get("/hello", (req, res) => {
+//   res.end("<html><body>Hello <b>World</b></body></html>\n");
+// });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
