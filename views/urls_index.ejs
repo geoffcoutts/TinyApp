@@ -15,6 +15,9 @@
           <form method="POST" action="/urls/<%= url %>/delete" style="margin-left:15px;">
             <input type="submit" value="Delete">
           </form>
+          <form method="GET" action="/urls/<%= url %>" style="margin-left:15px;">
+            <input type="submit" value="Edit">
+          </form>
         </li>
       <% }; %>
     </ul>

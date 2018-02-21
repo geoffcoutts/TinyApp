@@ -49,6 +49,12 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("http://localhost:8080/urls");
 });
 
+// Post response from clicking on update button. Updates entry in urlDatabase.
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.update;
+  res.redirect("http://localhost:8080/urls");
+});
+
 // Get response for redirection to full URL
 app.get("/u/:shortURL", (req, res) => {
   // console.log(urlDatabase[req.params.shortURL]);
