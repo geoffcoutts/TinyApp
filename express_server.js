@@ -38,19 +38,22 @@ app.get("/urls/:id", (req, res) => {
 
 // Post response to add to URL Database
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
+  let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`urls/${shortURL}`);
 });
 
-// Post response from clicking on delete button. Removes entry from urlDatabase.
+// Post response from clicking on delete button.
+// Removes entry from urlDatabase.
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
 
-// Post response from clicking on update button. Updates entry in urlDatabase.
+// Post response from clicking on update button in a url profile page.
+// Updates entry in urlDatabase.
 app.post("/urls/:id", (req, res) => {
+  // console.log(req.body);
   urlDatabase[req.params.id] = req.body.update;
   res.redirect("/urls");
 });
@@ -59,7 +62,6 @@ app.post("/urls/:id", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   // console.log(urlDatabase[req.params.shortURL]);
   let longURL = urlDatabase[req.params.shortURL];
-  // console.log(urlDatabase);
   res.redirect(`//${longURL}`);
 });
 
