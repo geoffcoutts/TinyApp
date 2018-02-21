@@ -40,26 +40,27 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`http://localhost:8080/urls/${shortURL}`);
+  res.redirect(`urls/${shortURL}`);
 });
 
 // Post response from clicking on delete button. Removes entry from urlDatabase.
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
-  res.redirect("http://localhost:8080/urls");
+  res.redirect("/urls");
 });
 
 // Post response from clicking on update button. Updates entry in urlDatabase.
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.update;
-  res.redirect("http://localhost:8080/urls");
+  res.redirect("/urls");
 });
 
 // Get response for redirection to full URL
 app.get("/u/:shortURL", (req, res) => {
   // console.log(urlDatabase[req.params.shortURL]);
   let longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
+  // console.log(urlDatabase);
+  res.redirect(`//${longURL}`);
 });
 
 // app.get("/urls.json", (req, res) =>{
