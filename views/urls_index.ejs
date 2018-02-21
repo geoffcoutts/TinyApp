@@ -10,7 +10,12 @@
     <h1>URL Listings</h1>
     <ul>
       <% for (url in urls) { %>
-        <li><%= url %> -> <a href="<%= urls[url]%>"><%= urls[url] %></a></li>
+        <li>
+          <%= url %> -> <a href="<%= urls[url]%>"><%= urls[url] %></a>
+          <form method="POST" action="/urls/<%= url %>/delete" style="margin-left:15px;">
+            <input type="submit" value="Delete">
+          </form>
+        </li>
       <% }; %>
     </ul>
     <a href="/urls/new">Create your own</a>

@@ -12,19 +12,22 @@ var urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-app.get("/", (req, res) => {
-  res.end("Hello!");
-});
+// app.get("/", (req, res) => {
+//   res.end("Hello!");
+// });
 
+// Get response leading to index page of all URLs
 app.get("/urls", (req, res) => {
   let templateVars = {urls: urlDatabase};
   res.render("urls_index", templateVars);
 });
 
+// Get response leading to create new url page
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+// Get response to individual url page
 app.get("/urls/:id", (req, res) => {
   let templateVars = {shortURL: req.params.id,
                       urls: urlDatabase
@@ -32,12 +35,21 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+
+// Post response to add to URL Database
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`http://localhost:8080/urls/${shortURL}`);
 });
 
+// Post response from clicking on delete button. Removes entry from urlDatabase.
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect("http://localhost:8080/urls");
+});
+
+// Get response for redirection to full URL
 app.get("/u/:shortURL", (req, res) => {
   // console.log(urlDatabase[req.params.shortURL]);
   let longURL = urlDatabase[req.params.shortURL];
@@ -46,10 +58,6 @@ app.get("/u/:shortURL", (req, res) => {
 
 // app.get("/urls.json", (req, res) =>{
 //   res.json(urlDatabase);
-// });
-
-// app.get("/hello", (req, res) => {
-//   res.end("<html><body>Hello <b>World</b></body></html>\n");
 // });
 
 app.listen(PORT, () => {
