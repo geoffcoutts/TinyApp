@@ -1,16 +1,10 @@
 <h1><a href="/urls">TinyApp</a></h1>
 
-<% if (username === undefined) { %>
-  <form method="POST" action="/login">
-    <label for="username">Username: </label>
-    <input id="username" type="text" name="username" placeholder="Please enter username">
-    <input type="submit" value="Login">
-  </form>
-  <form method="GET" action="/Register">
-    <input type="submit" value="Register">
-  </form>
+<% if (user === undefined) { %>
+  <a href="/login">Login Here</a>
+  <a href="/register">Register</a>
 <% } else { %>
-  <p><%= [username] %></p>
+  <p><%= user.email %></p>
   <form method="POST" action="/logout">
     <input type="submit" value="Logout">
   </form>

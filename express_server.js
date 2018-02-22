@@ -3,6 +3,7 @@ const app = express();
 const PORT = process.env.PORT || 8080; // default port 8080
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
+
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
@@ -32,16 +33,38 @@ const users = {
 
 // Get response from clicking a register button. Leads to a registration page.
 app.get("/register", (req, res) => {
-  let templateVars = {
-    username: req.cookies["username"],
-  };
-  res.render("register", templateVars);
+  // Check if client is already logged in, if so, redirects to urls_index
+  if (req.cookies.user_id === undefined) {
+    let templateVars = {
+      user: req.cookies.user_id
+    };
+    res.render("register", templateVars);
+  } else {
+    let templateVars = {
+      user:req.cookies.user_id,
+      urls: urlDatabase
+    };
+    res.render("urls_index", templateVars);
+  }
+});
+
+app.get("/login", (req, res)=>{
+  // console.log(req.cookies.user_id);
+  if (req.cookies.user_id === undefined) {
+    res.render("login");
+  } else {
+    let templateVars = {
+      user: req.cookies.user_id,
+      urls: urlDatabase
+    };
+    res.render("urls_index", templateVars);
+  }
 });
 
 // Get response leading to index page of all URLs
 app.get("/urls", (req, res) => {
   let templateVars = {
-    username: req.cookies["username"],
+    user: req.cookies.user_id,
     urls: urlDatabase
     };
   res.render("urls_index", templateVars);
@@ -50,28 +73,29 @@ app.get("/urls", (req, res) => {
 // Get response leading to create new url page
 app.get("/urls/new", (req, res) => {
   let templateVars = {
-    username: req.cookies["username"]
+    user: req.cookies.user_id
     };
   res.render("urls_new", templateVars);
 });
 
 // Get response to individual url page
 app.get("/urls/:id", (req, res) => {
+  // console.log(req.cookies.user_id);
   let templateVars = {
-    username: req.cookies["username"],
+    user: req.cookies.user_id,
     shortURL: req.params.id,
     urls: urlDatabase
     };
+    // console.log(templateVars);
   res.render("urls_show", templateVars);
 });
 
 // Post response to registering a new user
 app.post("/register", (req, res)=> {
+  //Returns true if the given email from registration form already exists in the users object database.
   function emailCheck(email) {
-    console.log("running email check");
+    // console.log("running email check");
     for (let user in users) {
-      console.log("running loop");
-      console.log(users[user]["email"]);
       if (users[user]["email"] === email) {
         return true;
       }
@@ -79,6 +103,7 @@ app.post("/register", (req, res)=> {
     return false;
   }
   if (req.body.email && req.body.password && !emailCheck(req.body.email)) {
+    // console.log(emailCheck(req.body.email));
     let uniqueID = generateRandomString();
     users[uniqueID] = uniqueID;
     users[uniqueID] = {
@@ -86,14 +111,12 @@ app.post("/register", (req, res)=> {
                       "email": req.body.email,
                       "password": req.body.password
                     };
-    console.log(users);
-    res.cookie("username", req.body.email);
-    res.cookie("user_id", users.uniqueID);
+    res.cookie("user_id", users[uniqueID]);
     res.redirect("urls");
   } else if (!req.body.email || !req.body.password) {
-    res.sendStatus(400);
+    res.redirect(400, "/register");
   } else if (emailCheck(req.body.email)) {
-    res.sendStatus(400);
+    res.redirect(400, "/register");
   }
 });
 
@@ -127,13 +150,34 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) =>{
-  res.cookie("username", req.body.username);
-  // console.log(req.body.username)
-  res.redirect("/urls");
+  let currentUser ;
+  // Loops through all users comparing email and then password
+  // If both match, return true and set currentUser equal to the user they matched
+  function loginCheck(email, password) {
+    // console.log(email, password);
+    for (let user in users) {
+      if (users[user]["email"] === email) {
+        if (users[user]["password"] === password) {
+          currentUser = users[user];
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+    return false;
+  }
+  if (loginCheck(req.body.email, req.body.password)) {
+    res.cookie("user_id", currentUser);
+    res.redirect("/urls");
+  } else {
+    res.redirect(403, "/login");
+  }
+
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
