@@ -13,9 +13,30 @@ var urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  "user1111": {
+    "id": "user1111",
+    "email": "user1111@gmail.com",
+    "password": "pass1111"
+  },
+  "user2222": {
+    "id": "user2222",
+    "email": "user2222@gmail.com",
+    "password": "pass2222"
+  }
+};
+
 // app.get("/", (req, res) => {
 //   res.end("Hello!");
 // });
+
+// Get response from clicking a register button. Leads to a registration page.
+app.get("/register", (req, res) => {
+  let templateVars = {
+    username: req.cookies["username"],
+  };
+  res.render("register", templateVars);
+});
 
 // Get response leading to index page of all URLs
 app.get("/urls", (req, res) => {
@@ -44,12 +65,50 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// Post response to registering a new user
+app.post("/register", (req, res)=> {
+  function emailCheck(email) {
+    console.log("running email check");
+    for (let user in users) {
+      console.log("running loop");
+      console.log(users[user]["email"]);
+      if (users[user]["email"] === email) {
+        return true;
+      }
+    }
+    return false;
+  }
+  if (req.body.email && req.body.password && !emailCheck(req.body.email)) {
+    let uniqueID = generateRandomString();
+    users[uniqueID] = uniqueID;
+    users[uniqueID] = {
+                      "id": uniqueID,
+                      "email": req.body.email,
+                      "password": req.body.password
+                    };
+    console.log(users);
+    res.cookie("username", req.body.email);
+    res.cookie("user_id", users.uniqueID);
+    res.redirect("urls");
+  } else if (!req.body.email || !req.body.password) {
+    res.sendStatus(400);
+  } else if (emailCheck(req.body.email)) {
+    res.sendStatus(400);
+  }
+});
 
 // Post response to add to URL Database
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`urls/${shortURL}`);
+});
+
+// Get response for redirection to full URL
+app.get("/u/:shortURL", (req, res) => {
+  // console.log(urlDatabase[req.params.shortURL]);
+  let longURL = urlDatabase[req.params.shortURL];
+  res.redirect(`//${longURL}`);
 });
 
 // Post response from clicking on delete button.
@@ -65,13 +124,6 @@ app.post("/urls/:id", (req, res) => {
   // console.log(req.body);
   urlDatabase[req.params.id] = req.body.update;
   res.redirect("/urls");
-});
-
-// Get response for redirection to full URL
-app.get("/u/:shortURL", (req, res) => {
-  // console.log(urlDatabase[req.params.shortURL]);
-  let longURL = urlDatabase[req.params.shortURL];
-  res.redirect(`//${longURL}`);
 });
 
 app.post("/login", (req, res) =>{

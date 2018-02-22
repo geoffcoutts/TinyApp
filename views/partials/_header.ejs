@@ -6,6 +6,9 @@
     <input id="username" type="text" name="username" placeholder="Please enter username">
     <input type="submit" value="Login">
   </form>
+  <form method="GET" action="/Register">
+    <input type="submit" value="Register">
+  </form>
 <% } else { %>
   <p><%= [username] %></p>
   <form method="POST" action="/logout">
