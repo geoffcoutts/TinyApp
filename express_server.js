@@ -10,8 +10,14 @@ app.use(cookieParser());
 app.set("view engine", "ejs");
 
 var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+            "url": "http://www.lighthouselabs.ca",
+            "userID": "user1111"
+          },
+  "9sm5xK": {
+            "url": "http://www.google.com",
+            "userID": "user2222"
+          }
 };
 
 const users = {
@@ -51,7 +57,10 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res)=>{
   // console.log(req.cookies.user_id);
   if (req.cookies.user_id === undefined) {
-    res.render("login");
+    let templateVars = {
+      user: undefined
+    };
+    res.render("login", templateVars);
   } else {
     let templateVars = {
       user: req.cookies.user_id,
@@ -84,13 +93,13 @@ app.get("/urls/new", (req, res) => {
 
 // Get response to individual url page
 app.get("/urls/:id", (req, res) => {
-  // console.log(req.cookies.user_id);
+
   let templateVars = {
     user: req.cookies.user_id,
     shortURL: req.params.id,
-    urls: urlDatabase
+    url: urlDatabase[req.params.id].url
     };
-    // console.log(templateVars);
+  console.log(templateVars);
   res.render("urls_show", templateVars);
 });
 
@@ -127,7 +136,11 @@ app.post("/register", (req, res)=> {
 // Post response to add to URL Database
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL] = {
+                          url: req.body.longURL,
+                          userID: req.cookies.user_id.id
+                        };
+  console.log(urlDatabase);
   res.redirect(`urls/${shortURL}`);
 });
 
@@ -141,16 +154,26 @@ app.get("/u/:shortURL", (req, res) => {
 // Post response from clicking on delete button.
 // Removes entry from urlDatabase.
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect("/urls");
+  console.log(req.cookies.user_id.id);
+  console.log(urlDatabase[req.params.id].userID);
+  if (req.cookies.user_id.id === urlDatabase[req.params.id].userID) {
+    delete urlDatabase[req.params.id];
+    res.redirect("/urls");
+  } else {
+    res.redirect(401, "/urls");
+  }
 });
 
 // Post response from clicking on update button in a url profile page.
 // Updates entry in urlDatabase.
 app.post("/urls/:id", (req, res) => {
   // console.log(req.body);
-  urlDatabase[req.params.id] = req.body.update;
-  res.redirect("/urls");
+  if (req.cookies.user_id.id === urlDatabase[req.params.id].userID) {
+    urlDatabase[req.params.id] = req.body.update;
+    res.redirect("/urls");
+  } else {
+    res.redirect(401, "/urls");
+  }
 });
 
 app.post("/login", (req, res) =>{

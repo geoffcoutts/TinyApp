@@ -9,10 +9,8 @@
     </header>
     <form action="/urls/<%= shortURL%>" method="POST" style="margin:150px;">
       <label for="update">ShortURL: <%= shortURL%></label>
-      <input id="update" type="text" name="update" placeholder="<%=urls[shortURL]%>" style="width: 300px">
+      <input id="update" type="text" name="update" placeholder="<%= url %>" style="width: 300px">
       <input type="submit" value="Update">
     </form>
-<!--       <a href="<%= urls[shortURL]%>"><%= urls[shortURL] %></a> -> <%= shortURL %>
- -->
   </body>
 </html>
