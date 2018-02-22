@@ -72,10 +72,14 @@ app.get("/urls", (req, res) => {
 
 // Get response leading to create new url page
 app.get("/urls/new", (req, res) => {
-  let templateVars = {
-    user: req.cookies.user_id
-    };
-  res.render("urls_new", templateVars);
+  if (req.cookies.user_id) {
+    let templateVars = {
+      user: req.cookies.user_id
+      };
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect(401, "/login");
+  }
 });
 
 // Get response to individual url page
@@ -188,7 +192,6 @@ app.post("/logout", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
 
 function generateRandomString () {
   let str = [];
