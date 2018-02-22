@@ -9,17 +9,21 @@
     </header>
     <h1>URL Listings</h1>
     <ul>
-      <% for (url in urls) { %>
-        <li>
-          <%= url %> -> <a href="//<%= urls[url]%>"><%= urls[url] %></a>
-          <form method="POST" action="/urls/<%= url %>/delete" style="margin-left:15px;">
-            <input type="submit" value="Delete">
-          </form>
-          <form method="GET" action="/urls/<%= url %>" style="margin-left:15px;">
-            <input type="submit" value="Edit">
-          </form>
-        </li>
-      <% }; %>
+      <% if (user) { %>
+        <% for (url in urls) { %>
+          <li>
+            <%= url %> -> <a href="//<%= urls[url]%>"><%= urls[url] %></a>
+            <form method="POST" action="/urls/<%= url %>/delete" style="margin-left:15px;">
+              <input type="submit" value="Delete">
+            </form>
+            <form method="GET" action="/urls/<%= url %>" style="margin-left:15px;">
+              <input type="submit" value="Edit">
+            </form>
+          </li>
+        <% }; %>
+      <% } else { %>
+        <div>Please log in</div>
+      <% }%>
     </ul>
     <a href="/urls/new">Create your own</a>
   </body>
