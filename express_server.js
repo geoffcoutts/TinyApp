@@ -40,37 +40,34 @@ const users = {
 };
 
 app.get("/", (req, res) => {
-  res.redirect("/urls");
+  if (req.session.user_id) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 // Get response from clicking a register button. Leads to a registration page.
 app.get("/register", (req, res) => {
   // Check if client is already logged in, if so, redirects to urls_index
-  if (req.session.user_id === undefined) {
-    let templateVars = {
-      user: req.session.user_id
-    };
-    res.render("register", templateVars);
+  if (typeof req.session.user_id === "undefined") {
+    res.render("register");
   } else {
     let templateVars = {
       user:req.session.user_id,
-      urls: urlDatabase
+      urls: personalUrls(req.session.user_id)
     };
     res.render("urls_index", templateVars);
   }
 });
 
 app.get("/login", (req, res)=>{
-  // console.log(req.session.user_id);
-  if (req.session.user_id === undefined) {
-    let templateVars = {
-      user: undefined
-    };
-    res.render("login", templateVars);
+  if (typeof req.session.user_id === "undefined") {
+    res.render("login");
   } else {
     let templateVars = {
       user: req.session.user_id,
-      urls: urlDatabase
+      urls: personalUrls(req.session.user_id)
     };
     res.render("urls_index", templateVars);
   }
@@ -79,28 +76,13 @@ app.get("/login", (req, res)=>{
 // Get response leading to index page of all URLs
 app.get("/urls", (req, res) => {
   if (req.session.user_id) {
-    let personalURLs = (cookie) => {
-      let urlList = {};
-      for (let urlID in urlDatabase) {
-        // console.log(typeof(urlID))
-        if (urlDatabase[urlID].userID === req.session.user_id.id) {
-          urlList[urlID] = urlDatabase[urlID].url;
-        }
-      }
-      // console.log(urlList)
-      return  urlList;
-    };
     let templateVars = {
       user: req.session.user_id,
-      urls: personalURLs(req.session.user_id),
+      urls: personalUrls(req.session.user_id),
       };
-    // console.log(templateVars);
     res.render("urls_index", templateVars);
   } else {
-    let templateVars = {
-        user: undefined
-    };
-    res.render("login", templateVars);
+    res.status(401).render("login", {"error": "Please login."});
   }
 });
 
@@ -112,22 +94,24 @@ app.get("/urls/new", (req, res) => {
       };
     res.render("urls_new", templateVars);
   } else {
-    res.redirect(401, "/login");
+    res.status(401).render("login", {"error": "Please login."});
   }
 });
 
 // Get response to individual url page
 app.get("/urls/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.status(404).render("login", {"error": "Page not found."});
+  }
   if (req.session.user_id && req.session.user_id.id === urlDatabase[req.params.id].userID) {
-  let templateVars = {
-    user: req.session.user_id,
-    shortURL: req.params.id,
-    url: urlDatabase[req.params.id].url
-    };
-  // console.log(templateVars);
-  res.render("urls_show", templateVars);
+    let templateVars = {
+                        user: req.session.user_id,
+                        shortURL: req.params.id,
+                        url: urlDatabase[req.params.id].url
+                        };
+    res.render("urls_show", templateVars);
   } else {
-    res.redirect(401, "/urls");
+    res.status(401).render("login", {"error": "Please login."});
   }
 });
 
@@ -135,7 +119,6 @@ app.get("/urls/:id", (req, res) => {
 app.post("/register", (req, res)=> {
   //Returns true if the given email from registration form already exists in the users object database.
   function emailCheck(email) {
-    // console.log("running email check");
     for (let user in users) {
       if (users[user]["email"] === email) {
         return true;
@@ -144,7 +127,6 @@ app.post("/register", (req, res)=> {
     return false;
   }
   if (req.body.email && req.body.password && !emailCheck(req.body.email)) {
-    // console.log(emailCheck(req.body.email));
     let uniqueID = generateRandomString();
     users[uniqueID] = uniqueID;
     users[uniqueID] = {
@@ -155,9 +137,9 @@ app.post("/register", (req, res)=> {
     req.session.user_id = users[uniqueID];
     res.redirect("urls");
   } else if (!req.body.email || !req.body.password) {
-    res.redirect(400, "/register");
+    res.status(400).render("register", {"error": "Registration failed due to blank entry."});
   } else if (emailCheck(req.body.email)) {
-    res.redirect(400, "/register");
+    res.status(400).render("register", {"error": "Registration failed due to user already existing."});
   }
 });
 
@@ -174,18 +156,23 @@ app.post("/urls", (req, res) => {
 
 // Get response for redirection to full URL
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL].url;
-  res.redirect(`${longURL}`);
+  if (urlDatabase[req.params.shortURL]) {
+    let longURL = urlDatabase[req.params.shortURL].url;
+    res.redirect(`${longURL}`);
+  } else {
+    res.sendStatus(404);
+  }
+
 });
 
 // Post response from clicking on delete button.
 // Removes entry from urlDatabase.
 app.post("/urls/:id/delete", (req, res) => {
-  // console.log(req.session.user_id.id);
-  // console.log(urlDatabase[req.params.id].userID);
-  if (req.session.user_id.id === urlDatabase[req.params.id].userID) {
+  if (req.session.user_id && req.session.user_id.id === urlDatabase[req.params.id].userID) {
     delete urlDatabase[req.params.id];
     res.redirect("/urls");
+  } else if (!req.session.user_id) {
+    res.status(401).render("login", {"error": "Please login."});
   } else {
     res.redirect(401, "/urls");
   }
@@ -194,17 +181,13 @@ app.post("/urls/:id/delete", (req, res) => {
 // Post response from clicking on update button in a url profile page.
 // Updates entry in urlDatabase.
 app.post("/urls/:id", (req, res) => {
-  // console.log(req.body);
-  console.log(urlDatabase[req.params.id]);
   if (req.session.user_id.id === urlDatabase[req.params.id].userID) {
     urlDatabase[req.params.id] = {"url": req.body.update,
                                  "userID": req.session.user_id.id
-                                };
-    console.log(req.params.id);
-    console.log(urlDatabase[req.params.id]);
+                                 };
     res.redirect("/urls");
   } else {
-    res.redirect(401, "/urls");
+    res.status(403).render("urls", {"error": "Forbidden Request."});
   }
 });
 
@@ -213,7 +196,6 @@ app.post("/login", (req, res) =>{
   // Loops through all users comparing email and then password
   // If both match, return true and set currentUser equal to the user they matched
   function loginCheck(email, password) {
-    // console.log(email, password);
     for (let user in users) {
       if (users[user]["email"] === email) {
         if (bcrypt.compareSync(password, users[user].password)) {
@@ -227,28 +209,35 @@ app.post("/login", (req, res) =>{
     return false;
   }
   if (loginCheck(req.body.email, req.body.password)) {
-    // res.cookie("user_id", currentUser);
     req.session.user_id = currentUser;
     res.redirect("/urls");
   } else {
-    res.redirect(403, "/login");
+    res.status(403).render("login", {"error": "Login failed."});
   }
 
 });
 
 app.post("/logout", (req, res) => {
   req.session= null;
-  res.redirect("/urls");
+  res.redirect("/login");
 });
-
-// app.get("/urls.json", (req, res) =>{
-//   res.json(urlDatabase);
-// });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+// Generates a user's list of personal urls
+let personalUrls = (cookie) => {
+  let urlList = {};
+  for (let urlID in urlDatabase) {
+    if (urlDatabase[urlID].userID === cookie.id) {
+      urlList[urlID] = urlDatabase[urlID].url;
+    }
+  }
+  return  urlList;
+};
+
+// Generates a random string for creating user profiles and shortened URLs
 function generateRandomString () {
   let str = [];
   const alphanumeric = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

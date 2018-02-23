@@ -1,13 +1,16 @@
 <!DOCTYPE HTML>
 <html lang="en">
   <Head>
+    <title>TinyApp</title>
   </Head>
   <body>
     <header>
       <% include ./partials/_header %>
     </header>
     <h1>Register</h1>
-
+    <% if (typeof error !== "undefined") { %>
+      <p><%= error %></p>
+    <% } %>
     <form action="/register" method="POST">
       <input id="email" class="inputfield" type="email" name="email" placeholder="address@email.com">
       <input id="password" class="inputfield" type="password" name="password" placeholder="password">

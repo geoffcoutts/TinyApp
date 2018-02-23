@@ -2,8 +2,12 @@
 <html lang="en">
   <head><title>TinyApp</title></head>
   <body>
-    <% include ./partials/_header %>
-    <h1><a href="/urls">TinyApp</a></h1>
+    <header>
+      <% include ./partials/_header %>
+    </header>
+    <% if (typeof error !== "undefined") { %>
+      <p><%= error %></p>
+    <% } %>
     <form method="POST" action="/login">
       <label for="email">Email: </label>
       <input id="email" type="text" name="email" placeholder="Please enter your email">

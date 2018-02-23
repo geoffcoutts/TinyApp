@@ -7,22 +7,29 @@
     <header>
       <% include ./partials/_header %>
     </header>
+    <% if (typeof error !== "undefined") { %>
+      <p><%= error %></p>
+    <% } %>
     <h1>URL Listings</h1>
     <ul>
+      <!-- If user is logged in -->
       <% if (user) { %>
+      <!-- Provide a list of all URLS that they have created -->
         <% for (url in urls) { %>
           <li>
             <%= url %> -> <a href="//<%= urls[url]%>"><%= urls[url] %></a>
+            <!-- A delete button will be provided per entry -->
             <form method="POST" action="/urls/<%= url %>/delete" style="margin-left:15px;">
               <input type="submit" value="Delete">
             </form>
+            <!-- An edit button will be provided per entry -->
             <form method="GET" action="/urls/<%= url %>" style="margin-left:15px;">
               <input type="submit" value="Edit">
             </form>
           </li>
         <% }; %>
       <% } else { %>
-        <div>Please log in</div>
+        <p>Please log in<p>
       <% }%>
     </ul>
     <a href="/urls/new">Create your own</a>
