@@ -10,10 +10,14 @@
     <% if (typeof error !== "undefined") { %>
       <p><%= error %></p>
     <% } %>
-    <form action="/urls/<%= shortURL%>" method="POST" style="margin:150px;">
+    <form action="/urls/<%= shortURL%>" method="POST" style="margin:150px;", align="center">
       <label for="update">ShortURL: <%= shortURL%></label>
       <input id="update" type="text" name="update" placeholder="<%= url %>" style="width: 300px">
       <input type="submit" value="Update">
     </form>
+    <div>
+      <p>Date created: <%= birthday%></p>
+      <p>Total Vists: <%= totalVisits%></p>
+    </div>
   </body>
 </html>

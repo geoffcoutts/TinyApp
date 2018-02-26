@@ -15,14 +15,19 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs");
 
+// Test users and URLs
 var urlDatabase = {
   "b2xVn2": {
             "url": "http://www.lighthouselabs.ca",
-            "userID": "user1111"
+            "userID": "user1111",
+            "birthday": "Fri, 23 Feb 2018 21:45:02 GMT",
+            "totalVisits": 0
           },
   "9sm5xK": {
             "url": "http://www.google.com",
-            "userID": "user2222"
+            "userID": "user2222",
+            "birthday": "Fri, 23 Feb 2018 16:40:02 GMT",
+            "totalVisits": 0
           }
 };
 
@@ -39,6 +44,11 @@ const users = {
   }
 };
 
+// ************
+// GET REQUESTS
+// ************
+
+// Redirects to url index page if logged in, otherwise login page.
 app.get("/", (req, res) => {
   if (req.session.user_id) {
     res.redirect("/urls");
@@ -62,6 +72,7 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/login", (req, res)=>{
+    // Check if client is already logged in, if so, redirects to urls_index
   if (typeof req.session.user_id === "undefined") {
     res.render("login");
   } else {
@@ -75,6 +86,7 @@ app.get("/login", (req, res)=>{
 
 // Get response leading to index page of all URLs
 app.get("/urls", (req, res) => {
+// Checks if client is logged in, and if not, redirects them to log in.
   if (req.session.user_id) {
     let templateVars = {
       user: req.session.user_id,
@@ -88,6 +100,7 @@ app.get("/urls", (req, res) => {
 
 // Get response leading to create new url page
 app.get("/urls/new", (req, res) => {
+// Checks if client is logged in, and if not, redirects them to log in.
   if (req.session.user_id) {
     let templateVars = {
       user: req.session.user_id
@@ -100,14 +113,18 @@ app.get("/urls/new", (req, res) => {
 
 // Get response to individual url page
 app.get("/urls/:id", (req, res) => {
-  if (!urlDatabase[req.params.id]) {
+  // Checks if client is logged in, and if not, redirects them to log in.
+  let shortUrl = urlDatabase[req.params.id];
+  if (!shortUrl) {
     res.status(404).render("login", {"error": "Page not found."});
   }
-  if (req.session.user_id && req.session.user_id.id === urlDatabase[req.params.id].userID) {
+  if (req.session.user_id && req.session.user_id.id === shortUrl.userID) {
     let templateVars = {
                         user: req.session.user_id,
                         shortURL: req.params.id,
-                        url: urlDatabase[req.params.id].url
+                        url: shortUrl.url,
+                        birthday: shortUrl.birthday,
+                        totalVisits: shortUrl.totalVisits
                         };
     res.render("urls_show", templateVars);
   } else {
@@ -115,9 +132,26 @@ app.get("/urls/:id", (req, res) => {
   }
 });
 
+// Get response for redirection to full URL
+app.get("/u/:shortURL", (req, res) => {
+  //Checks if the provided shorturl ID is valid and displays default 404 page if not.
+  let shortUrl = urlDatabase[req.params.shortURL];
+  if (shortUrl) {
+    shortUrl.totalVisits++;
+    let longUrl = shortUrl.url;
+    res.redirect(`${longUrl}`);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+// *************
+// POST REQUESTS
+// *************
+
 // Post response to registering a new user
 app.post("/register", (req, res)=> {
-  //Returns true if the given email from registration form already exists in the users object database.
+  // Returns true if the given email from registration form already exists in the users object database.
   function emailCheck(email) {
     for (let user in users) {
       if (users[user]["email"] === email) {
@@ -126,14 +160,15 @@ app.post("/register", (req, res)=> {
     }
     return false;
   }
+  // Checks if email and password are filled out and verifies if email is alreayd used. Will provide error messages for why the registration might fail
   if (req.body.email && req.body.password && !emailCheck(req.body.email)) {
     let uniqueID = generateRandomString();
-    users[uniqueID] = uniqueID;
     users[uniqueID] = {
                       "id": uniqueID,
                       "email": req.body.email,
                       "password": bcrypt.hashSync(req.body.password, saltRounds)
                     };
+    // Generates session cookie for new user
     req.session.user_id = users[uniqueID];
     res.redirect("urls");
   } else if (!req.body.email || !req.body.password) {
@@ -148,22 +183,13 @@ app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = {
                           url: req.body.longURL,
-                          userID: req.session.user_id.id
+                          userID: req.session.user_id.id,
+                          birthday: new Date().toUTCString(),
+                          totalVisits: 0
                         };
-  console.log(urlDatabase);
   res.redirect(`urls/${shortURL}`);
 });
 
-// Get response for redirection to full URL
-app.get("/u/:shortURL", (req, res) => {
-  if (urlDatabase[req.params.shortURL]) {
-    let longURL = urlDatabase[req.params.shortURL].url;
-    res.redirect(`${longURL}`);
-  } else {
-    res.sendStatus(404);
-  }
-
-});
 
 // Post response from clicking on delete button.
 // Removes entry from urlDatabase.
@@ -218,13 +244,17 @@ app.post("/login", (req, res) =>{
 });
 
 app.post("/logout", (req, res) => {
-  req.session= null;
+  req.session = null;
   res.redirect("/login");
 });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+// *****************
+// MODULAR FUNCTIONS
+// *****************
 
 // Generates a user's list of personal urls
 let personalUrls = (cookie) => {

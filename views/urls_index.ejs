@@ -10,28 +10,30 @@
     <% if (typeof error !== "undefined") { %>
       <p><%= error %></p>
     <% } %>
-    <h1>URL Listings</h1>
-    <ul>
-      <!-- If user is logged in -->
-      <% if (user) { %>
-      <!-- Provide a list of all URLS that they have created -->
-        <% for (url in urls) { %>
-          <li>
-            <%= url %> -> <a href="//<%= urls[url]%>"><%= urls[url] %></a>
-            <!-- A delete button will be provided per entry -->
-            <form method="POST" action="/urls/<%= url %>/delete" style="margin-left:15px;">
-              <input type="submit" value="Delete">
-            </form>
-            <!-- An edit button will be provided per entry -->
-            <form method="GET" action="/urls/<%= url %>" style="margin-left:15px;">
-              <input type="submit" value="Edit">
-            </form>
-          </li>
-        <% }; %>
-      <% } else { %>
-        <p>Please log in<p>
-      <% }%>
-    </ul>
-    <a href="/urls/new">Create your own</a>
+    <div align="center">
+      <h1>URL Listings</h1>
+      <ul>
+        <!-- If user is logged in -->
+        <% if (user) { %>
+        <!-- Provide a list of all URLS that they have created -->
+          <% for (url in urls) { %>
+            <li list-style-position="inside">
+              <%= url %> -> <a href="//<%= urls[url]%>"><%= urls[url] %></a>
+              <!-- A delete button will be provided per entry -->
+              <form method="POST" action="/urls/<%= url %>/delete" style="padding:10px;">
+                <input type="submit" value="Delete">
+              </form>
+              <!-- An edit button will be provided per entry -->
+              <form method="GET" action="/urls/<%= url %>" style="padding:10px;">
+                <input type="submit" value="Edit">
+              </form>
+            </li>
+          <% }; %>
+        <% } else { %>
+          <p>Please log in<p>
+        <% }%>
+      </ul>
+      <a href="/urls/new">Create your own</a>
+    </div>
   </body>
 </html>
